@@ -1,0 +1,10 @@
+{
+    "name": "MemoryNFT #1",
+    "description": "Evolves as actions happen.",
+    "image": "ipfs://bafybeihxcb34ugyomp5pyr3ds4p2r54l4dwreth2q5vj73rkodu7xqucxm",
+    "attributes": [
+      { "trait_type": "Memories", "value": 1 },
+      { "trait_type": "Level", "value": 2 }
+    ]
+  }
+  

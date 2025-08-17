@@ -3,9 +3,13 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./MinimalTBA.sol";
 
 contract StreamerNFT is ERC721, Ownable {
 	uint256 public nextTokenId;
+
+	// Token-bound account per token (demo-friendly 6551-style account)
+	mapping(uint256 => address) private _tokenAccount;
 
 	// Stores tokenURI for each NFT
 	mapping(uint256 => string) private _tokenURIs;
@@ -22,6 +26,10 @@ contract StreamerNFT is ERC721, Ownable {
 		_tokenURIs[tokenId] = initialTokenURI;
 		emit MetadataUpdated(tokenId, initialTokenURI);
 		nextTokenId++;
+
+		// Deploy a minimal token-bound account for this NFT
+		address acct = address(new MinimalTBA(to));
+		_tokenAccount[tokenId] = acct;
 	}
 
 	// Update NFT metadata (e.g., when a milestone is reached)
@@ -35,6 +43,11 @@ contract StreamerNFT is ERC721, Ownable {
 	function tokenURI(uint256 tokenId) public view override returns (string memory) {
 		_requireOwned(tokenId);
 		return _tokenURIs[tokenId];
+	}
+
+	function tokenAccount(uint256 tokenId) external view returns (address) {
+		_requireOwned(tokenId);
+		return _tokenAccount[tokenId];
 	}
 }
 

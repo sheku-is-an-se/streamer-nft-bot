@@ -2,193 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>StreamerNFT - Sepolia</title>
+  <title>MemoryNFTs - StreamerNFT (Sepolia)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: sans-serif; margin: 16px; }
-    button, input { padding: 8px; margin: 4px 0; }
-    .section { margin: 16px 0; }
-    .row { margin: 8px 0; }
-    pre { background: #f4f4f4; padding: 8px; overflow: auto; }
+    :root{
+      --bg1:#0f1221; --bg2:#11162a; --panel:#151a30; --panel-soft:#1a2040;
+      --text:#e6e9f2; --muted:#a7b0c3; --border:#26304f; --primary:#6c8bff; --success:#2ecc71; --warning:#f39c12;
+      --shadow:0 10px 30px rgba(17,22,42,.35);
+    }
+    html,body{margin:0;padding:0;background:radial-gradient(1200px 800px at -10% -20%, #2a3161 0%, transparent 60%),
+                                 radial-gradient(800px 600px at 120% -10%, #1e2453 0%, transparent 60%),
+                                 linear-gradient(180deg, var(--bg1), var(--bg2));
+               color:var(--text); font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
+    a{color:#9fb3ff;text-decoration:none} a:hover{text-decoration:underline}
+    .container{max-width:1100px;margin:0 auto;padding:20px}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand h1{margin:0;font-size:20px;letter-spacing:.4px}
+    .brand .badge{font-size:12px;color:#c7cff5;background:#25305a;border:1px solid var(--border);padding:4px 8px;border-radius:999px}
+    .actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+           border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:var(--shadow)}
+    .summary{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:12px;margin:16px 0}
+    .summary .stat{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+                   border:1px solid var(--border); border-radius:12px; padding:12px}
+    .summary .label{color:var(--muted);font-size:12px;margin-bottom:4px}
+    .summary .value{font-weight:600}
+
+    .btn, button{appearance:none;cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:600;
+      color:#0b1022;background:#e4e9ff; transition:.2s transform ease, .2s box-shadow ease; box-shadow:0 6px 16px rgba(108,139,255,.25)}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.secondary{background:#8ff7c7; box-shadow:0 6px 16px rgba(46,204,113,.25)}
+    .btn.ghost{background:#26304f;color:#cdd6f6;box-shadow:none;border:1px solid var(--border)}
+    .btn.link{background:transparent;color:#9fb3ff;border:1px solid var(--border)}
+    .inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+    .mint{margin:20px 0}
+    .mint h3{margin:0 0 10px 0; font-size:16px}
+    .field{margin:10px 0}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    input[type="text"]{width:100%;box-sizing:border-box;background:#0f1431;border:1px solid var(--border);
+      color:var(--text);border-radius:10px;padding:10px 12px;outline:none}
+    input[type="text"]:focus{border-color:#3c4ca3; box-shadow:0 0 0 2px rgba(108,139,255,.2)}
+
+    #nftGrid{display:grid;grid-template-columns:repeat(auto-fill, minmax(260px,1fr));gap:16px;margin:16px 0}
+    .nft-card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid var(--border); border-radius:14px; padding:14px; box-shadow:var(--shadow); transition:.25s transform ease, .25s box-shadow ease}
+    .nft-card:hover{transform:translateY(-3px); box-shadow:0 12px 34px rgba(17,22,42,.45)}
+    .nft-card h4{margin:0 0 10px 0;font-size:16px;letter-spacing:.3px}
+    .nft-card img{width:200px;height:200px;object-fit:cover;border:1px solid #3a4470;border-radius:10px;display:block;margin:8px 0}
+    .nft-card .uri{font-size:12px;color:#b9c2df;word-break:break-all}
+    .nft-card .controls{display:grid;gap:8px;margin-top:10px}
+    .hint{color:#a7b0c3;font-size:12px}
+
+    .log{margin:20px 0}
+    #MemoryLog{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      border:1px solid var(--border); border-radius:12px; max-height:260px; overflow:auto; padding:10px}
+    #MemoryLog .line{padding:4px 0;border-bottom:1px dashed #273055}
+    #MemoryLog .line:last-child{border-bottom:0}
+
+    .linkline{display:flex;align-items:center;gap:8px;margin:8px 0 0}
+    @media (max-width:960px){.summary{grid-template-columns:1fr 1fr}.actions{width:100%}}
+    @media (max-width:640px){.summary{grid-template-columns:1fr}.brand h1{font-size:18px}}
   </style>
 </head>
 <body>
-  <h1>StreamerNFT (Sepolia)</h1>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="badge">Sepolia</div>
+        <h1>MemoryNFTs — StreamerNFT</h1>
+      </div>
+      <div class="actions">
+        <a class="btn link" id="explorerLink" href="https://sepolia.etherscan.io/address/0x33253FBDd9bc3695593feA2A8f24c0A3Adae75b1" target="_blank" rel="noopener">View on Etherscan</a>
+      </div>
+    </div>
 
-  <div class="section">
-    <button id="btnConnect">Connect MetaMask</button>
-    <div id="connStatus">Not connected</div>
+    <div class="summary">
+      <div class="panel">
+        <div class="inline">
+          <button id="btnConnect" class="btn">Connect MetaMask</button>
+          <button id="btnRefresh" class="btn ghost">Refresh Data</button>
+        </div>
+      </div>
+      <div class="panel stat">
+        <div class="label">Status</div>
+        <div class="value" id="connStatus">Not connected</div>
+      </div>
+      <div class="panel stat">
+        <div class="label">Your Address</div>
+        <div class="value" id="yourAddress">-</div>
+      </div>
+      <div class="panel stat">
+        <div class="label">Total Supply</div>
+        <div class="value" id="totalSupply">-</div>
+      </div>
+    </div>
+
+    <div class="panel mint">
+      <h3>Mint NFT</h3>
+      <div class="field">
+        <label>Recipient Address</label>
+        <input id="mintTo" type="text" placeholder="0x..." />
+      </div>
+      <div class="field">
+        <label>Metadata URI</label>
+        <input id="mintUri" type="text" placeholder="ipfs://.../metadata.json or https://..." />
+      </div>
+      <div class="inline">
+        <button id="btnMint" class="btn secondary">Mint NFT</button>
+        <span class="hint">Owner-only by contract</span>
+      </div>
+      <pre id="mintStatus" class="hint" style="margin:10px 0 0"></pre>
+    </div>
+
+    <div class="panel">
+      <div class="inline" style="justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Your NFTs</h3>
+        <span class="hint">Images update instantly when memories evolve</span>
+      </div>
+      <div id="nftGrid"></div>
+    </div>
+
+    <div class="log">
+      <h3 style="margin:0 0 8px">Memory Log</h3>
+      <div id="MemoryLog"></div>
+      <div class="linkline">
+        <span class="hint">Live events via WebSocket — mints and metadata updates appear instantly</span>
+      </div>
+    </div>
   </div>
 
-  <div class="section">
-    <div class="row">
-      <button id="btnRefresh">Refresh Data</button>
-    </div>
-    <div class="row">Total Supply: <span id="totalSupply">-</span></div>
-    <div class="row">Your Address: <span id="yourAddress">-</span></div>
-    <div class="row">
-      <div>Your NFTs:</div>
-      <ul id="yourNfts"></ul>
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>Mint NFT (owner only)</h3>
-    <div class="row">
-      <label>Recipient Address</label><br />
-      <input id="mintTo" type="text" placeholder="0x..." style="width: 100%;" />
-    </div>
-    <div class="row">
-      <label>Metadata URI</label><br />
-      <input id="mintUri" type="text" placeholder="ipfs://... or https://..." style="width: 100%;" />
-    </div>
-    <div class="row">
-      <button id="btnMint">Mint</button>
-    </div>
-    <div class="row">
-      <pre id="mintStatus"></pre>
-    </div>
-  </div>
-
-  <!-- Ethers v6 UMD -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js"></script>
-  <script>
-    (function () {
-      const CONTRACT_ADDRESS = "0x3309B21AEACF9D23078D595EE01Cffa5d939190d";
-      const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
-
-      const el = {
-        btnConnect: document.getElementById("btnConnect"),
-        connStatus: document.getElementById("connStatus"),
-        btnRefresh: document.getElementById("btnRefresh"),
-        totalSupply: document.getElementById("totalSupply"),
-        yourAddress: document.getElementById("yourAddress"),
-        yourNfts: document.getElementById("yourNfts"),
-        mintTo: document.getElementById("mintTo"),
-        mintUri: document.getElementById("mintUri"),
-        btnMint: document.getElementById("btnMint"),
-        mintStatus: document.getElementById("mintStatus"),
-      };
-
-      let provider = null;
-      let signer = null;
-      let account = null;
-      let contract = null;
-      let abi = null;
-
-      async function loadAbi() {
-        // Assumes StreamerNFT.json is in the same folder and either:
-        // { "abi": [...] } or directly [...]
-        const artifact = await fetch("./StreamerNFT.json").then(r => r.json());
-        abi = Array.isArray(artifact) ? artifact : (artifact.abi || artifact);
-      }
-
-      async function ensureSepolia() {
-        const chainId = await window.ethereum.request({ method: "eth_chainId" });
-        if (chainId !== SEPOLIA_CHAIN_ID_HEX) {
-          try {
-            await window.ethereum.request({
-              method: "wallet_switchEthereumChain",
-              params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }],
-            });
-          } catch (err) {
-            console.warn("Please switch MetaMask to Sepolia (chainId 11155111).", err);
-            throw new Error("Wrong network. Switch to Sepolia and try again.");
-          }
-        }
-      }
-
-      async function connect() {
-        if (!window.ethereum) {
-          el.connStatus.textContent = "MetaMask not found. Please install it.";
-          return;
-        }
-
-        try {
-          await loadAbi();
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-          await ensureSepolia();
-
-          provider = new ethers.BrowserProvider(window.ethereum);
-          signer = await provider.getSigner();
-          account = await signer.getAddress();
-          contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
-
-          el.connStatus.textContent = "Connected";
-          el.yourAddress.textContent = account;
-          el.mintTo.value = account;
-
-          await refreshData();
-        } catch (err) {
-          console.error(err);
-          el.connStatus.textContent = "Connection failed: " + (err?.message || err);
-        }
-      }
-
-      async function refreshData() {
-        if (!contract) return;
-
-        // Total supply -> using public nextTokenId as supply
-        const next = await contract.nextTokenId(); // BigInt
-        const total = Number(next);
-        el.totalSupply.textContent = String(total);
-
-        // Owned NFTs -> iterate over [0..next-1], check ownerOf, then tokenURI
-        el.yourNfts.innerHTML = "";
-        if (!account) return;
-
-        for (let i = 0; i < total; i++) {
-          try {
-            const owner = await contract.ownerOf(i);
-            if (owner.toLowerCase() === account.toLowerCase()) {
-              let uri = "";
-              try {
-                uri = await contract.tokenURI(i);
-              } catch (e) {
-                uri = "(tokenURI reverted)";
-              }
-              const li = document.createElement("li");
-              li.textContent = `Token #${i} — ${uri}`;
-              el.yourNfts.appendChild(li);
-            }
-          } catch (e) {
-            // token may not exist
-          }
-        }
-      }
-
-      async function mint() {
-        el.mintStatus.textContent = "";
-        if (!contract || !signer) {
-          el.mintStatus.textContent = "Connect wallet first.";
-          return;
-        }
-        const to = el.mintTo.value.trim();
-        const uri = el.mintUri.value.trim();
-        if (!to || !to.startsWith("0x")) {
-          el.mintStatus.textContent = "Invalid recipient address.";
-          return;
-        }
-        if (!uri) {
-          el.mintStatus.textContent = "Metadata URI is required.";
-          return;
-        }
-        try {
-          const tx = await contract.mint(to, uri);
-          el.mintStatus.textContent = "Mint tx submitted: " + tx.hash + "\nWaiting for confirmation...";
-          await tx.wait();
-          el.mintStatus.textContent = "Minted successfully. Tx: " + tx.hash;
-          await refreshData();
-        } catch (err) {
-          console.error(err);
-          el.mintStatus.textContent = "Mint failed: " + (err?.shortMessage || err?.message || err);
-        }
-      }
-
-      el.btnConnect.addEventListener("click", connect);
-      el.btnRefresh.addEventListener("click", refreshData);
-      el.btnMint.addEventListener("click", mint);
-    })();
-  </script>
+  <script src="./script.js"></script>
 </body>
 </html>
+
