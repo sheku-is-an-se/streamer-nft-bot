@@ -1,2 +1,8 @@
+node_modules/
+artifacts/
+frontend/build/
+venv/
+dist/
+cache/
 .env
 .env
