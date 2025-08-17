@@ -1,21 +1,21 @@
-const hre = require("hardhat");
+import hre from "hardhat";
 
 async function main() {
-  // Compile contracts
-  await hre.run('compile');
+  console.log("Deploying StreamerNFT contract...");
 
-  // Deploy StreamerNFT
+  // Get the contract factory
   const StreamerNFT = await hre.ethers.getContractFactory("StreamerNFT");
+
+  // Deploy the contract
   const streamerNFT = await StreamerNFT.deploy();
 
+  // Wait for deployment to finish (ethers v5)
   await streamerNFT.deployed();
 
-  console.log("StreamerNFT deployed to:", streamerNFT.address);
+  console.log("StreamerNFT deployed at:", streamerNFT.address);
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

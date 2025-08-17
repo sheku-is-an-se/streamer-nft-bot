@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>StreamerNFT - Sepolia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; margin: 16px; }
+    button, input { padding: 8px; margin: 4px 0; }
+    .section { margin: 16px 0; }
+    .row { margin: 8px 0; }
+    pre { background: #f4f4f4; padding: 8px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>StreamerNFT (Sepolia)</h1>
+
+  <div class="section">
+    <button id="btnConnect">Connect MetaMask</button>
+    <div id="connStatus">Not connected</div>
+  </div>
+
+  <div class="section">
+    <div class="row">
+      <button id="btnRefresh">Refresh Data</button>
+    </div>
+    <div class="row">Total Supply: <span id="totalSupply">-</span></div>
+    <div class="row">Your Address: <span id="yourAddress">-</span></div>
+    <div class="row">
+      <div>Your NFTs:</div>
+      <ul id="yourNfts"></ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Mint NFT (owner only)</h3>
+    <div class="row">
+      <label>Recipient Address</label><br />
+      <input id="mintTo" type="text" placeholder="0x..." style="width: 100%;" />
+    </div>
+    <div class="row">
+      <label>Metadata URI</label><br />
+      <input id="mintUri" type="text" placeholder="ipfs://... or https://..." style="width: 100%;" />
+    </div>
+    <div class="row">
+      <button id="btnMint">Mint</button>
+    </div>
+    <div class="row">
+      <pre id="mintStatus"></pre>
+    </div>
+  </div>
+
+  <!-- Ethers v6 UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js"></script>
+  <script>
+    (function () {
+      const CONTRACT_ADDRESS = "0x3309B21AEACF9D23078D595EE01Cffa5d939190d";
+      const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
+
+      const el = {
+        btnConnect: document.getElementById("btnConnect"),
+        connStatus: document.getElementById("connStatus"),
+        btnRefresh: document.getElementById("btnRefresh"),
+        totalSupply: document.getElementById("totalSupply"),
+        yourAddress: document.getElementById("yourAddress"),
+        yourNfts: document.getElementById("yourNfts"),
+        mintTo: document.getElementById("mintTo"),
+        mintUri: document.getElementById("mintUri"),
+        btnMint: document.getElementById("btnMint"),
+        mintStatus: document.getElementById("mintStatus"),
+      };
+
+      let provider = null;
+      let signer = null;
+      let account = null;
+      let contract = null;
+      let abi = null;
+
+      async function loadAbi() {
+        // Assumes StreamerNFT.json is in the same folder and either:
+        // { "abi": [...] } or directly [...]
+        const artifact = await fetch("./StreamerNFT.json").then(r => r.json());
+        abi = Array.isArray(artifact) ? artifact : (artifact.abi || artifact);
+      }
+
+      async function ensureSepolia() {
+        const chainId = await window.ethereum.request({ method: "eth_chainId" });
+        if (chainId !== SEPOLIA_CHAIN_ID_HEX) {
+          try {
+            await window.ethereum.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }],
+            });
+          } catch (err) {
+            console.warn("Please switch MetaMask to Sepolia (chainId 11155111).", err);
+            throw new Error("Wrong network. Switch to Sepolia and try again.");
+          }
+        }
+      }
+
+      async function connect() {
+        if (!window.ethereum) {
+          el.connStatus.textContent = "MetaMask not found. Please install it.";
+          return;
+        }
+
+        try {
+          await loadAbi();
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          await ensureSepolia();
+
+          provider = new ethers.BrowserProvider(window.ethereum);
+          signer = await provider.getSigner();
+          account = await signer.getAddress();
+          contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
+
+          el.connStatus.textContent = "Connected";
+          el.yourAddress.textContent = account;
+          el.mintTo.value = account;
+
+          await refreshData();
+        } catch (err) {
+          console.error(err);
+          el.connStatus.textContent = "Connection failed: " + (err?.message || err);
+        }
+      }
+
+      async function refreshData() {
+        if (!contract) return;
+
+        // Total supply -> using public nextTokenId as supply
+        const next = await contract.nextTokenId(); // BigInt
+        const total = Number(next);
+        el.totalSupply.textContent = String(total);
+
+        // Owned NFTs -> iterate over [0..next-1], check ownerOf, then tokenURI
+        el.yourNfts.innerHTML = "";
+        if (!account) return;
+
+        for (let i = 0; i < total; i++) {
+          try {
+            const owner = await contract.ownerOf(i);
+            if (owner.toLowerCase() === account.toLowerCase()) {
+              let uri = "";
+              try {
+                uri = await contract.tokenURI(i);
+              } catch (e) {
+                uri = "(tokenURI reverted)";
+              }
+              const li = document.createElement("li");
+              li.textContent = `Token #${i} — ${uri}`;
+              el.yourNfts.appendChild(li);
+            }
+          } catch (e) {
+            // token may not exist
+          }
+        }
+      }
+
+      async function mint() {
+        el.mintStatus.textContent = "";
+        if (!contract || !signer) {
+          el.mintStatus.textContent = "Connect wallet first.";
+          return;
+        }
+        const to = el.mintTo.value.trim();
+        const uri = el.mintUri.value.trim();
+        if (!to || !to.startsWith("0x")) {
+          el.mintStatus.textContent = "Invalid recipient address.";
+          return;
+        }
+        if (!uri) {
+          el.mintStatus.textContent = "Metadata URI is required.";
+          return;
+        }
+        try {
+          const tx = await contract.mint(to, uri);
+          el.mintStatus.textContent = "Mint tx submitted: " + tx.hash + "\nWaiting for confirmation...";
+          await tx.wait();
+          el.mintStatus.textContent = "Minted successfully. Tx: " + tx.hash;
+          await refreshData();
+        } catch (err) {
+          console.error(err);
+          el.mintStatus.textContent = "Mint failed: " + (err?.shortMessage || err?.message || err);
+        }
+      }
+
+      el.btnConnect.addEventListener("click", connect);
+      el.btnRefresh.addEventListener("click", refreshData);
+      el.btnMint.addEventListener("click", mint);
+    })();
+  </script>
+</body>
+</html>
